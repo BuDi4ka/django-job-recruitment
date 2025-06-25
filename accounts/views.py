@@ -1,12 +1,13 @@
 from django.shortcuts import redirect, render
 from django.http import HttpRequest
 from django.contrib import messages, auth
+from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.utils.crypto import get_random_string
 
 from datetime import datetime, timezone
 
-from .models import User, PendingUser
+from .models import User, PendingUser, Token, TokenType
 from common.tasks import send_email
 
 
@@ -97,3 +98,56 @@ def verify_account(request: HttpRequest):
 
             context = {"email": email}
             return render(request, "verify_account.html", context, status=400)
+
+
+def send_password_reset_link(request: HttpRequest):
+    if request.method == "POST":
+        email: str = request.POST.get("email")
+        user = get_user_model().objects.filter(email=email.lower()).first()
+
+        if user:
+            token, _ = Token.objects.update_or_create(
+                user=user,
+                token_type=TokenType.PASSWORD_RESET,
+                defaults={
+                    "token": get_random_string(20),
+                    "created_at": datetime.now(timezone.utc),
+                }
+            )
+
+            email_data = {
+                "token": token.token,
+                "email": user.email,
+            }
+            send_email(
+                "Your password reset link",
+                [user.email],
+                "emails/password_reset_template.html",
+                context=email_data,
+            )
+            messages.success(request, "Reset link has been sent to your email")
+            return redirect("reset-password-via-email")
+
+        else:
+            messages.error(request, "Email not found")
+            return redirect("reset-password-via-email")
+
+    else:
+        return render(request, "forgot_password.html")
+
+
+def verify_password_reset_link(request: HttpRequest):
+    email = request.GET.get("email")
+    reset_token = request.GET.get("token")
+
+    token = Token.objects.filter(
+        user__email=email,
+        token=reset_token,
+        token_type=TokenType.PASSWORD_RESET
+    ).first()
+
+    if not token or not token.is_valid():
+        messages.error(request, "Invalid or expired password reset link")
+        return redirect("reset-password-via-email")
+
+    return render(request, "set_new_password_using_reset_token.html", {"email": email, "token": reset_token})

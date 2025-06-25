@@ -61,3 +61,8 @@ class Token(models.Model):
         if timediff > lifespan_in_seconds:
             return False
         return True
+    
+    def reset_user_password(self, raw_password: str):
+        self.user: User
+        self.user.set_password(raw_password)
+        self.user.save()

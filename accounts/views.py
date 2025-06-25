@@ -8,6 +8,7 @@ from django.utils.crypto import get_random_string
 from datetime import datetime, timezone
 
 from .models import User, PendingUser, Token, TokenType
+from .decorators import redirect_auth_user
 from common.tasks import send_email
 
 
@@ -15,6 +16,7 @@ def home(request: HttpRequest):
     return render(request, "home.html")
 
 
+@redirect_auth_user
 def login(request: HttpRequest):
     if request.method == "POST":
         email: str = request.POST.get("email")

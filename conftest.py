@@ -6,7 +6,6 @@ from django.contrib.auth.hashers import make_password
 from accounts.models import User
 
 
-
 @pytest.fixture 
 def client():
     return Client()
@@ -18,3 +17,9 @@ def user_instance(db):
         email="randomabc@gmail.com",
         password=make_password("randompassword")
     )
+
+
+@pytest.fixture
+def auth_user_password() -> str:
+    """ Returns the password needed for auth """
+    return "randompassword"

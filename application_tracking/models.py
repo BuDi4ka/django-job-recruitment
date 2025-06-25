@@ -16,7 +16,7 @@ class JobAdvert(BaseModel):
     is_published = models.BooleanField(default=True)
     deadline = models.DateField()
     skills = models.CharField(max_length=255)
-    created_at = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
 
     class Meta:
         ordering = ['-created_at']

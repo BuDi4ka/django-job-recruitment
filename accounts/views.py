@@ -7,6 +7,7 @@ from django.utils.crypto import get_random_string
 from datetime import datetime, timezone
 
 from .models import User, PendingUser
+from common.tasks import send_email
 
 
 def register(request):
@@ -29,7 +30,14 @@ def register(request):
                     "created_at": datetime.now(timezone.utc)
                 }
             )
-            # send_email()
+            send_email(
+                "Verify your account",
+                [cleaned_email], 
+                "emails/email_verification_template.html",
+                context= {
+                    "code": verification_code
+                }
+            )
             messages.success(request, f"Verification code has been sent to {cleaned_email}")
             return render(request, "verify_account.html")
 

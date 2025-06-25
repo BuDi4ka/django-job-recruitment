@@ -37,9 +37,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
-    #Local apps
-    "accounts"
+    # Local apps
+    "accounts",
 ]
 
 # Custom User Model
@@ -126,3 +125,6 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# EMAIL CONFIG
+EMAIL_BACKED = "django.core.mail.backends.console.EmailBackend"

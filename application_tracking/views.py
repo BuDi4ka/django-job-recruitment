@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 
 from .forms import JobAdvertForm, JobApplicationForm
-from .models import JobAdvert, JobApplication
+from .models import JobAdvert, JobApplication, User
 
 
 def create_advert(request: HttpRequest):
@@ -108,4 +108,17 @@ def my_applications(request: HttpRequest):
 
 @login_required
 def my_jobs(request: HttpRequest):
-    pass
+    user: User = request.user
+    jobs = JobAdvert.objects.filter(created_by=user)
+
+    paginator = Paginator(jobs, 10)
+    requested_page = request.GET.get("page")
+    paginated_jobs = paginator.get_page(requested_page)
+
+    current_date = timezone.now().date()
+
+    context = {
+        "my_jobs": paginated_jobs,
+        "current_date": current_date
+    }
+    return render(request, "my_jobs.html", context)

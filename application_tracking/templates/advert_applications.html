@@ -42,26 +42,19 @@
                         <td>{{ application.created_at }}</td>
                         <td>
                             <span>
-                                <form method="post" action="">
+                                <form method="post" action="{% url "decide" application.id %}">
                                     {% csrf_token %}
-                                    <select name="status"  {% if application.status != 'APPLIED' %} disabled {% endif %}>
-                                        <option value='APPLIED' {% if application.status == 'APPLIED' %} selected {% endif %}>APPLIED</option>
-
-                                        <option value='REJECTED' {% if application.status == 'REJECTED' %} selected {% endif %}>REJECTED</option>
-
-                                        <option value='INTERVIEW' {% if application.status == 'INTERVIEW' %} selected {% endif %}>INTERVIEW</option>
-
+                                    <select name="status" {% if application.status|upper != 'APPLIED' %} disabled {% endif %}>
+                                        <option value='APPLIED' {% if application.status|upper == 'APPLIED' %} selected {% endif %}>APPLIED</option>
+                                        <option value='REJECTED' {% if application.status|upper == 'REJECTED' %} selected {% endif %}>REJECTED</option>
+                                        <option value='INTERVIEW' {% if application.status|upper == 'INTERVIEW' %} selected {% endif %}>INTERVIEW</option>
                                     </select>
-                                    <button class="" type="submit" {% if application.status != 'APPLIED' %} disabled {% endif %}>Decide
-                                    </button>
-
+                                    <button class="" type="submit" {% if application.status|upper != 'APPLIED' %} disabled {% endif %}>Decide</button>
                                 </form>
                             </span>
                         </td>
-
                     </tr>
                 {% empty %}
-
                 <tr>
                     <td colspan="12">No applicants found.</td>
                 </tr>

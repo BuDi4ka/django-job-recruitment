@@ -12,4 +12,5 @@ urlpatterns = [
     path("<uuid:advert_id>/applications/", views.advert_applications, name="job-applications"),
     path("<uuid:advert_id>/update/", views.update_advert, name="update-advert"),
     path("<uuid:advert_id>/delete/", views.delete_advert, name="delete-advert"),
+    path("<uuid:job_application_id>/decide/", views.decide, name="decide"),
 ]

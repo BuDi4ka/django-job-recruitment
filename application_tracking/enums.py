@@ -20,6 +20,7 @@ class JobType(models.TextChoices):
 
 
 class ApplicationStatus(models.TextChoices):
-    APPLIED = ("applied", "Applied")
-    REJECTED = ("rejected", "Rejected")
-    INTERVIEW = ("interview", "Interview")
+    APPLIED = ("APPLIED", "Applied")
+    REJECTED = ("REJECTED", "Rejected")
+    INTERVIEW = ("INTERVIEW", "Interview")
+

@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.utils import timezone
 from django.core.paginator import Paginator
 
+from common.tasks import send_email
+from application_tracking.enums import ApplicationStatus
 from .forms import JobAdvertForm, JobApplicationForm
 from .models import JobAdvert, JobApplication, User
 
@@ -114,7 +116,7 @@ def update_advert(request: HttpRequest, advert_id):
 
     if request.user != advert.created_by:
         return HttpResponseForbidden("You can only update your adverts")
-    
+
     form = JobAdvertForm(request.POST or None, instance=advert)
 
     if form.is_valid():
@@ -123,11 +125,8 @@ def update_advert(request: HttpRequest, advert_id):
         messages.success(request, "Advert updated successfully")
 
         return redirect(instance.get_absolute_url())
-    
-    context = {
-        "job_advert_form": form,
-        "btn_text": "Update advert"
-    }
+
+    context = {"job_advert_form": form, "btn_text": "Update advert"}
     return render(request, "create_advert.html", context)
 
 
@@ -137,7 +136,7 @@ def delete_advert(request: HttpRequest, advert_id):
 
     if request.user != advert.created_by:
         return HttpResponseForbidden("You can only update your adverts")
-    
+
     advert.delete()
     messages.success(request, "Advert deleted successfully")
 
@@ -150,16 +149,58 @@ def advert_applications(request: HttpRequest, advert_id):
 
     if request.user != advert.created_by:
         return HttpResponseForbidden("You can only see your applications for the job")
-    
+
     applications = advert.applications.all()
     applications = JobApplication.objects.filter(job_advert=advert.id)
     paginator = Paginator(applications, 10)
     requested_page = request.GET.get("page")
     paginated_applications = paginator.get_page(requested_page)
 
-    context = {
-        "applications": paginated_applications,
-        "advert": advert
-    }
+    context = {"applications": paginated_applications, "advert": advert}
 
     return render(request, "advert_applications.html", context)
+
+
+def decide(request: HttpRequest, job_application_id):
+    job_application = get_object_or_404(JobApplication, pk=job_application_id)
+
+    if request.user != job_application.job_advert.created_by:
+        return HttpResponseForbidden("You can only descide on your advert")
+
+    if request.method == "POST":
+        status = request.POST.get("status")
+
+        job_application.status = status
+        job_application.save(update_fields=["status"])
+
+        messages.success(request, f"Application status updated to {status}")
+
+        if status == ApplicationStatus.REJECTED:
+            context = {
+                "applicant_name": job_application.name,
+                "job_title": job_application.job_advert.title,
+                "company_name": job_application.job_advert.company_name
+            }
+
+            send_email(
+                f"Application Outcome for - {job_application.job_advert.title}",
+                [job_application.email],
+                "emails/job_application_update.html",
+                context
+            )
+        
+        if status == ApplicationStatus.INTERVIEW:
+            context = {
+                "applicant_name": job_application.name,
+                "job_title": job_application.job_advert.title,
+                "company_name": job_application.job_advert.company_name
+            }
+
+            send_email(
+                f"Interview Invitation for - {job_application.job_advert.title}",
+                [job_application.email],
+                "emails/interview_invitation.html",
+                context
+            )
+
+        return redirect("job-applications", advert_id=job_application.job_advert.id)

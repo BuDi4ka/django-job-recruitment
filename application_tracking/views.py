@@ -3,7 +3,7 @@ from django.http import HttpRequest
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-from .forms import JobAdvertForm
+from .forms import JobAdvertForm, JobApplicationForm
 from .models import JobAdvert
 
 
@@ -33,9 +33,12 @@ def list_adverts():
 
 
 def get_advert(request: HttpRequest, advert_id):
+    form = JobApplicationForm()
+
     job_advert = get_object_or_404(JobAdvert, pk=advert_id)
     context = {
-        "job_advert": job_advert
+        "job_advert": job_advert,
+        "application_form": form
     }
     return render(request, "advert.html", context)
 

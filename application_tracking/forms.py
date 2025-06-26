@@ -1,7 +1,7 @@
 from django.forms import ModelForm
 from django import forms
 
-from .models import JobAdvert
+from .models import JobAdvert, JobApplication
 
 
 class JobAdvertForm(ModelForm):
@@ -48,5 +48,30 @@ class JobAdvertForm(ModelForm):
             ),
             "deadline": forms.DateInput(
                 attrs={"placeholdet": "Date", "class": "form-control", "type": "date"}
+            ),
+        }
+
+
+class JobApplicationForm(ModelForm):
+    class Meta:
+        model = JobApplication
+        fields = [
+            "name",
+            "email",
+            "portfolio_url",
+            "cv"
+        ]
+        widgets = {
+            "name": forms.TextInput(
+                attrs={"placeholder": "Your name", "class": "form-control"}
+            ),
+            "email": forms.EmailInput(
+                attrs={"placeholder": "Your email", "class": "form-control"}
+            ),
+            "portfolio_url": forms.URLInput(
+                attrs={"placeholder": "Portfolio URL", "class": "form-control"}
+            ),
+            "cv": forms.FileInput(
+                attrs={"placeholder": "Portfolio URL", "class": "form-control", "accept": ".pdf, .docs, .doc"}
             ),
         }

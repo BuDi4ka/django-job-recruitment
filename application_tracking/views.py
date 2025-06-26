@@ -73,6 +73,7 @@ def apply(request: HttpRequest, advert_id):
 
             application: JobApplication = form.save(commit=False)
             application.job_advert = advert
+            application.user = request.user
             application.save()
 
             messages.success(request, "Application submitted successfully")
@@ -87,9 +88,24 @@ def apply(request: HttpRequest, advert_id):
         return render(request, context)
 
 
-def my_applications():
-    pass
+@login_required
+def my_applications(request: HttpRequest):
+    user = request.user
+
+    user_applications = JobApplication.objects.filter(email=user.email)
+    paginator = Paginator(user_applications, 10)
+    
+    requested_page = request.GET.get("page")
+    paginated_applications = paginator.get_page(requested_page)
+
+    context = {
+        "my_applications": paginated_applications
+    }
+
+    return render(request, "my_applications.html", context)
 
 
-def my_jobs():
+
+@login_required
+def my_jobs(request: HttpRequest):
     pass

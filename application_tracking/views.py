@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpRequest
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -17,9 +17,12 @@ def create_advert(request: HttpRequest):
 
         messages.success(request, "Advert created. You can receive applications")
 
+        return redirect(instance.get_absolute_url())
+
     context = {
-        "form": form,
-        "title": "Create a new advert"
+        "job_advert_form": form,
+        "title": "Create a new advert",
+        "btn_text": "Create advert"
     }
     
     return render(request, "create_advert.html", context)
@@ -29,8 +32,12 @@ def list_adverts():
     pass
 
 
-def get_advert():
-    pass
+def get_advert(request: HttpRequest, advert_id):
+    job_advert = get_object_or_404(JobAdvert, pk=advert_id)
+    context = {
+        "job_advert": job_advert
+    }
+    return render(request, "advert.html", context)
 
 
 def delete_advert():

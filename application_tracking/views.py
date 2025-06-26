@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
@@ -24,22 +24,22 @@ def create_advert(request: HttpRequest):
     context = {
         "job_advert_form": form,
         "title": "Create a new advert",
-        "btn_text": "Create advert"
+        "btn_text": "Create advert",
     }
-    
+
     return render(request, "create_advert.html", context)
 
 
 def list_adverts(request: HttpRequest):
-    active_adverts = JobAdvert.objects.filter(is_published=True, deadline__gte=timezone.now().date())
+    active_adverts = JobAdvert.objects.filter(
+        is_published=True, deadline__gte=timezone.now().date()
+    )
 
     paginator = Paginator(active_adverts, 10)
     requested_page = request.GET.get("page")
     paginated_adverts = paginator.get_page(requested_page)
 
-    context = {
-        "job_adverts": paginated_adverts
-    }
+    context = {"job_adverts": paginated_adverts}
 
     return render(request, "home.html", context)
 
@@ -48,15 +48,8 @@ def get_advert(request: HttpRequest, advert_id):
     form = JobApplicationForm()
 
     job_advert = get_object_or_404(JobAdvert, pk=advert_id)
-    context = {
-        "job_advert": job_advert,
-        "application_form": form
-    }
+    context = {"job_advert": job_advert, "application_form": form}
     return render(request, "advert.html", context)
-
-
-def delete_advert():
-    pass
 
 
 def apply(request: HttpRequest, advert_id):
@@ -81,10 +74,7 @@ def apply(request: HttpRequest, advert_id):
     else:
         form = JobAdvertForm()
 
-        context = {
-            "job_advert": advert,
-            "application_form": form
-        }
+        context = {"job_advert": advert, "application_form": form}
         return render(request, context)
 
 
@@ -94,16 +84,13 @@ def my_applications(request: HttpRequest):
 
     user_applications = JobApplication.objects.filter(email=user.email)
     paginator = Paginator(user_applications, 10)
-    
+
     requested_page = request.GET.get("page")
     paginated_applications = paginator.get_page(requested_page)
 
-    context = {
-        "my_applications": paginated_applications
-    }
+    context = {"my_applications": paginated_applications}
 
     return render(request, "my_applications.html", context)
-
 
 
 @login_required
@@ -117,8 +104,41 @@ def my_jobs(request: HttpRequest):
 
     current_date = timezone.now().date()
 
-    context = {
-        "my_jobs": paginated_jobs,
-        "current_date": current_date
-    }
+    context = {"my_jobs": paginated_jobs, "current_date": current_date}
     return render(request, "my_jobs.html", context)
+
+
+@login_required
+def update_advert(request: HttpRequest, advert_id):
+    advert = get_object_or_404(JobAdvert, pk=advert_id)
+
+    if request.user != advert.created_by:
+        return HttpResponseForbidden("You can only update your adverts")
+    
+    form = JobAdvertForm(request.POST or None, instance=advert)
+
+    if form.is_valid():
+        instance: JobAdvert = form.save(commit=False)
+        instance.save()
+        messages.success(request, "Advert updated successfully")
+
+        return redirect(instance.get_absolute_url())
+    
+    context = {
+        "job_advert_form": form,
+        "btn_text": "Update advert"
+    }
+    return render(request, "create_advert.html", context)
+
+
+@login_required
+def delete_advert(request: HttpRequest, advert_id):
+    advert = get_object_or_404(JobAdvert, pk=advert_id)
+
+    if request.user != advert.created_by:
+        return HttpResponseForbidden("You can only update your adverts")
+    
+    advert.delete()
+    messages.success(request, "Advert deleted successfully")
+
+    return redirect("my-jobs")

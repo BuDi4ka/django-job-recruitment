@@ -50,12 +50,12 @@
                         </a>
                     </td>
                     <td>
-                        <a href="" target="_blank">
+                        <a href="{% url "update-advert" job.id %}" target="_blank">
                             Edit
                         </a>
                     </td>
                     <td>
-                        <form method='POST' action="">{% csrf_token %}
+                        <form method='POST' action="{% url "delete-advert" job.id %}">{% csrf_token %}
 
                             <button type="submit" class='small-btn'>Delete</button>
 

@@ -34,9 +34,7 @@ def create_advert(request: HttpRequest):
 
 
 def list_adverts(request: HttpRequest):
-    active_adverts = JobAdvert.objects.filter(
-        is_published=True, deadline__gte=timezone.now().date()
-    )
+    active_adverts = JobAdvert.objects.active()
 
     paginator = Paginator(active_adverts, 10)
     requested_page = request.GET.get("page")
@@ -211,24 +209,24 @@ def search(request: HttpRequest):
     keyword = request.GET.get("keyword")
     location = request.GET.get("location")
 
-    query = Q()
+    # query = Q()
 
-    if keyword:
-        query &= (
-            Q(title__icontains=keyword)
-            | Q(company_name__icontains=keyword)
-            | Q(description__icontains=keyword)
-            | Q(skills__icontains=keyword)
-        )
+    # if keyword:
+    #     query &= (
+    #         Q(title__icontains=keyword)
+    #         | Q(company_name__icontains=keyword)
+    #         | Q(description__icontains=keyword)
+    #         | Q(skills__icontains=keyword)
+    #     )
 
-    if location:
-        query &= Q(location__icontains=location)
+    # if location:
+    #     query &= Q(location__icontains=location)
 
-    active_adverts = JobAdvert.objects.filter(
-        is_published=True, deadline__gte=timezone.now().date()
-    )
+    # active_adverts = JobAdvert.objects.filter(
+    #     is_published=True, deadline__gte=timezone.now().date()
+    # )
 
-    result = active_adverts.filter(query)
+    result = JobAdvert.objects.search(keyword, location)
     paginator = Paginator(result, 10)
     requested_page = request.GET.get("page")
     paginated_adverts = paginator.get_page(requested_page)

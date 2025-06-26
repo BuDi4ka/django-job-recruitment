@@ -40,7 +40,7 @@
                     </td>
                     <td>{{ job.total_applicants }}</td>
                     <td>
-                        <a href="" target="_blank">
+                        <a href="{% url "job-applications" job.id %}" target="_blank">
                             View applicants
                         </a>
                     </td>

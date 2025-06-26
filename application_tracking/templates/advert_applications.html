@@ -35,14 +35,14 @@
                         </td>
                         <td>{{ application.status }}</td>
                         <td>
-                            <a href="" target="_blank">
+                            <a href="{% url "job-advert" application.job_advert.id %}" target="_blank">
                                 View
                             </a>
                         </td>
                         <td>{{ application.created_at }}</td>
                         <td>
                             <span>
-                                <form method="post" action="{% url 'decide' application.id %}">
+                                <form method="post" action="">
                                     {% csrf_token %}
                                     <select name="status"  {% if application.status != 'APPLIED' %} disabled {% endif %}>
                                         <option value='APPLIED' {% if application.status == 'APPLIED' %} selected {% endif %}>APPLIED</option>

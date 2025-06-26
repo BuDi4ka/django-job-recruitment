@@ -25,7 +25,7 @@
                 <p><strong>Type:</strong> {{advert.job_type}}</p>
                 <p><strong>Posted:</strong> {{advert.created_at| naturalday | title}}</p>
                 <p><strong>Skills:</strong>{{advert.skills|truncatechars:14}}</p>
-                <a class="small-btn"  href="">View Details</a>
+                <a class="small-btn"  href="{% url "job-advert" advert.id %}">View Details</a>
 
             </div>
 

@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 
 from .forms import JobAdvertForm, JobApplicationForm
-from .models import JobAdvert
+from .models import JobAdvert, JobApplication
 
 
 def create_advert(request: HttpRequest):
@@ -59,8 +59,32 @@ def delete_advert():
     pass
 
 
-def apply():
-    pass
+def apply(request: HttpRequest, advert_id):
+    advert = get_object_or_404(JobAdvert, pk=advert_id)
+
+    if request.method == "POST":
+        form = JobApplicationForm(request.POST, request.FILES)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+
+            if advert.applications.filter(email__iexact=email).exists():
+                messages.error(request, "You have already applied for this job")
+                return redirect("job-advert", advert_id=advert_id)
+
+            application: JobApplication = form.save(commit=False)
+            application.job_advert = advert
+            application.save()
+
+            messages.success(request, "Application submitted successfully")
+            return redirect("job-advert", advert_id=advert_id)
+    else:
+        form = JobAdvertForm()
+
+        context = {
+            "job_advert": advert,
+            "application_form": form
+        }
+        return render(request, context)
 
 
 def my_applications():

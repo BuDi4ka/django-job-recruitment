@@ -22,7 +22,7 @@
     <div class="application-form">
 
       <h3>Apply for this Job</h3>
-      <form action="" method="POST" enctype="multipart/form-data">
+      <form action="{% url "apply-job" job_advert.id %}" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         {{application_form.as_p}}
         <button type="submit" class="btn">Submit Application</button>

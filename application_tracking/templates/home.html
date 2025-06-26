@@ -9,7 +9,7 @@
 {% include 'header.html' %}
 
 <div class="search-container">
-    <form action="" method="GET" class="search-box">
+    <form action="{% url "search" %}" method="GET" class="search-box">
         <input type="text" name="keyword" placeholder="title, company, description, skills">
         <input type="text" name="location" placeholder="location">
         <button type="submit">Search</button>

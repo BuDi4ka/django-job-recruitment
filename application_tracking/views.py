@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.core.paginator import Paginator
+from django.db.models import Q
 
 from common.tasks import send_email
 from application_tracking.enums import ApplicationStatus
@@ -179,28 +180,60 @@ def decide(request: HttpRequest, job_application_id):
             context = {
                 "applicant_name": job_application.name,
                 "job_title": job_application.job_advert.title,
-                "company_name": job_application.job_advert.company_name
+                "company_name": job_application.job_advert.company_name,
             }
 
             send_email(
                 f"Application Outcome for - {job_application.job_advert.title}",
                 [job_application.email],
                 "emails/job_application_update.html",
-                context
+                context,
             )
-        
+
         if status == ApplicationStatus.INTERVIEW:
             context = {
                 "applicant_name": job_application.name,
                 "job_title": job_application.job_advert.title,
-                "company_name": job_application.job_advert.company_name
+                "company_name": job_application.job_advert.company_name,
             }
 
             send_email(
                 f"Interview Invitation for - {job_application.job_advert.title}",
                 [job_application.email],
                 "emails/interview_invitation.html",
-                context
+                context,
             )
 
         return redirect("job-applications", advert_id=job_application.job_advert.id)
+
+
+def search(request: HttpRequest):
+    keyword = request.GET.get("keyword")
+    location = request.GET.get("location")
+
+    query = Q()
+
+    if keyword:
+        query &= (
+            Q(title__icontains=keyword)
+            | Q(company_name__icontains=keyword)
+            | Q(description__icontains=keyword)
+            | Q(skills__icontains=keyword)
+        )
+
+    if location:
+        query &= Q(location__icontains=location)
+
+    active_adverts = JobAdvert.objects.filter(
+        is_published=True, deadline__gte=timezone.now().date()
+    )
+
+    result = active_adverts.filter(query)
+    paginator = Paginator(result, 10)
+    requested_page = request.GET.get("page")
+    paginated_adverts = paginator.get_page(requested_page)
+
+    context = {
+        "job_adverts": paginated_adverts
+    }
+    return render(request, "home.html", context)

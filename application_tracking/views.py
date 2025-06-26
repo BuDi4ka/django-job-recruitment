@@ -2,6 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpRequest
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.utils import timezone
+from django.core.paginator import Paginator
 
 from .forms import JobAdvertForm, JobApplicationForm
 from .models import JobAdvert
@@ -28,8 +30,18 @@ def create_advert(request: HttpRequest):
     return render(request, "create_advert.html", context)
 
 
-def list_adverts():
-    pass
+def list_adverts(request: HttpRequest):
+    active_adverts = JobAdvert.objects.filter(is_published=True, deadline__gte=timezone.now().date())
+
+    paginator = Paginator(active_adverts, 10)
+    requested_page = request.GET.get("page")
+    paginated_adverts = paginator.get_page(requested_page)
+
+    context = {
+        "job_adverts": paginated_adverts
+    }
+
+    return render(request, "home.html", context)
 
 
 def get_advert(request: HttpRequest, advert_id):
